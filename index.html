@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rổ Phim - Xem Phim Online</title>
+    <style>
+        /* ================= CSS CHUNG ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #0f0f0f; color: #fff; overflow-x: hidden; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* ================= HEADER ================= */
+        header {
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            padding: 15px 40px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            flex-wrap: wrap; gap: 10px;
+        }
+        .logo { font-size: 28px; font-weight: bold; color: #e94560; cursor: pointer; }
+        .logo span { color: #fff; }
+        nav ul { display: flex; list-style: none; gap: 25px; }
+        nav ul li a { color: #ddd; text-decoration: none; font-size: 15px; transition: color 0.3s; cursor: pointer; }
+        nav ul li a:hover { color: #e94560; }
+        .search-box { display: flex; background: #1f1f2e; border-radius: 25px; overflow: hidden; }
+        .search-box input { padding: 10px 15px; background: transparent; border: none; outline: none; color: #fff; width: 260px; }
+        .search-box button { padding: 10px 18px; background: #e94560; border: none; color: #fff; cursor: pointer; }
+
+        /* ================= TRANG CHỦ - HERO ================= */
+        .hero {
+            height: 450px; background: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1600') center/cover;
+            display: flex; align-items: center; padding: 0 60px; transition: background 0.5s;
+        }
+        .hero-content h1 { font-size: 48px; margin-bottom: 15px; max-width: 600px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        .hero-content p { color: #ccc; max-width: 500px; margin-bottom: 25px; line-height: 1.6; }
+        .btn-watch { padding: 12px 30px; background: #e94560; color: #fff; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .btn-watch:hover { background: #c73650; transform: scale(1.05); }
+        .section { padding: 40px 60px; }
+        .section-title { font-size: 26px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .section-title::before { content: ''; width: 5px; height: 28px; background: #e94560; border-radius: 3px; }
+
+        /* ================= CARD PHIM ================= */
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; }
+        .movie-card { background: #1a1a2e; border-radius: 10px; overflow: hidden; cursor: pointer; transition: 0.3s; position: relative; }
+        .movie-card:hover { transform: translateY(-8px); box-shadow: 0 10px 25px rgba(233,69,96,0.3); }
+        .movie-poster { position: relative; aspect-ratio: 2/3; overflow: hidden; background: #222; }
+        .movie-poster img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+        .movie-card:hover .movie-poster img { transform: scale(1.1); }
+        .badge { position: absolute; top: 10px; left: 10px; background: #e94560; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .movie-info { padding: 12px 15px; }
+        .movie-info h3 { font-size: 15px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .movie-info .meta { font-size: 13px; color: #999; display: flex; justify-content: space-between; }
+        .rating { color: #ffb400; }
+
+        /* ================= FOOTER ================= */
+        footer { background: #111122; padding: 30px 60px; text-align: center; color: #888; font-size: 14px; margin-top: 40px; }
+        footer a { color: #e94560; text-decoration: none; }
+
+        /* ================= MODAL XEM PHIM ================= */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-content { background: #1a1a2e; border-radius: 12px; max-width: 900px; width: 100%; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #e94560; background: none; border: none; z-index: 10;}
+        .modal-content h2 { margin-bottom: 15px; padding-right: 30px;}
+        .player { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; margin-bottom: 20px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #999; }
+        .player iframe, .player video { width: 100%; height: 100%; border: none; outline: none; }
+        .modal-content p { color: #bbb; line-height: 1.7; margin-bottom: 10px; }
+
+        /* ================= TRANG ADMIN ================= */
+        .admin-body { min-height: 100vh; padding: 20px; background: #0f0f0f; }
+        .admin-container { max-width: 1200px; margin: 0 auto; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 20px; background: #1a1a2e; border-radius: 10px; flex-wrap: wrap; gap: 10px; }
+        .admin-header h1 { color: #e94560; }
+        .memory-status { background: #16213e; padding: 10px 15px; border-radius: 8px; font-size: 14px; border: 1px solid #2a2a3e; }
+        .btn-back { padding: 10px 20px; background: transparent; border: 1px solid #e94560; color: #e94560; border-radius: 6px; text-decoration: none; font-weight: bold; cursor: pointer; }
+        .btn-back:hover { background: #e94560; color: #fff; }
+
+        .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .admin-tab { padding: 10px 20px; background: #1a1a2e; border: none; color: #ccc; cursor: pointer; border-radius: 6px; font-size: 15px; }
+        .admin-tab.active { background: #e94560; color: #fff; }
+
+        .admin-table { width: 100%; background: #1a1a2e; border-radius: 10px; overflow: hidden; border-collapse: collapse; }
+        .admin-table th, .admin-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #2a2a3e; }
+        .admin-table th { background: #16213e; color: #e94560; font-size: 14px; }
+        .admin-table td { font-size: 14px; color: #ddd; }
+        .admin-table img { width: 50px; height: 70px; object-fit: cover; border-radius: 4px; }
+
+        .form-container { max-width: 700px; margin: 0 auto; background: #1a1a2e; padding: 30px; border-radius: 12px; }
+        .form-container h2 { margin-bottom: 20px; color: #e94560; text-align: center; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #ccc; font-size: 14px; font-weight: bold; }
+        .form-group input[type="text"], 
+        .form-group input[type="number"], 
+        .form-group textarea {
+            width: 100%; padding: 10px 14px; background: #0f0f1e; border: 1px solid #2a2a3e; color: #fff; border-radius: 6px; outline: none;
+        }
+        .form-group input[type="file"] {
+            width: 100%; padding: 8px; background: #0f0f1e; border: 1px dashed #e94560; color: #ccc; border-radius: 6px; cursor: pointer;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: #e94560; }
+        
+        /* Khu vực hiển thị ảnh preview */
+        .preview-box { display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap; }
+        .preview-item { text-align: center; }
+        .preview-item img { border-radius: 6px; border: 1px solid #333; object-fit: cover; }
+        .preview-poster { max-width: 100px; height: 150px; display: none; }
+        .preview-banner { max-width: 300px; height: 150px; display: none; }
+        .preview-video-info { color: #00b894; font-size: 13px; margin-top: 5px; display: none; }
+
+        .btn-primary { width: 100%; padding: 12px; background: #e94560; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; margin-top: 10px;}
+        .btn-primary:hover { background: #c73650; }
+        .btn-edit { padding: 6px 12px; background: #0984e3; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 5px; }
+        .btn-danger { padding: 6px 12px; background: #d63031; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+
+        .alert { padding: 12px 18px; border-radius: 6px; margin-bottom: 15px; display: none; }
+        .alert.show { display: block; }
+
+        @media (max-width: 768px) {
+            header { padding: 15px 20px; }
+            nav ul { display: none; }
+            .search-box input { width: 150px; }
+            .hero { height: 350px; padding: 0 25px; }
+            .hero-content h1 { font-size: 30px; }
+            .section { padding: 30px 20px; }
+            footer { padding: 20px; }
+            .admin-table { display: block; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= TRANG CHỦ ================= -->
+    <div id="pageHome" class="page active">
+        <header>
+            <div class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">🎬 Rổ <span>Phim</span></div>
+            <nav>
+                <ul>
+                    <li><a onclick="window.scrollTo({top:0,behavior:'smooth'})">Trang Chủ</a></li>
+                    <li><a onclick="document.getElementById('phim-le').scrollIntoView({behavior:'smooth'})">Phim Lẻ</a></li>
+                    <li><a onclick="navigateTo('admin')">Admin</a></li>
+                </ul>
+            </nav>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Tìm phim..." onkeyup="handleSearch(event)">
+                <button onclick="searchMovies()">🔍</button>
+            </div>
+        </header>
+
+        <!-- Hero Banner Tự Động Đổi -->
+        <section class="hero" id="mainHero">
+            <div class="hero-content">
+                <h1 id="heroTitle">Phim Hay Đang Chờ Bạn</h1>
+                <p id="heroDesc">Khám phá kho phim chất lượng cao, xem trực tuyến với chất lượng tốt nhất.</p>
+                <button class="btn-watch" onclick="document.getElementById('phim-le').scrollIntoView({behavior:'smooth'})">▶ Khám Phá Ngay</button>
+            </div>
+        </section>
+
+        <section class="section" id="phim-le">
+            <h2 class="section-title">Phim Mới Cập Nhật</h2>
+            <div class="movie-grid" id="movieGrid"></div>
+        </section>
+
+        <section class="section" id="phim-bo">
+            <h2 class="section-title">Phim Do Admin Đăng</h2>
+            <div class="movie-grid" id="adminMovieGrid"></div>
+        </section>
+
+        <footer>
+            <p>© 2024 <a href="#">Rổ Phim</a> - Xem phim online miễn phí</p>
+        </footer>
+    </div>
+
+    <!-- ================= TRANG ADMIN ================= -->
+    <div id="pageAdmin" class="page">
+        <div class="admin-body">
+            <div class="admin-container">
+                <div class="admin-header">
+                    <h1>🎬 Quản Lý Phim</h1>
+                    <div class="memory-status" id="memoryStatus">Đang tính dung lượng...</div>
+                    <button class="btn-back" onclick="navigateTo('home')">← Về Trang Chủ</button>
+                </div>
+
+                <div id="adminAlert" class="alert alert-success"></div>
+
+                <div class="admin-tabs">
+                    <button class="admin-tab active" id="tabBtnList" onclick="switchTab('list')">📋 Danh sách phim</button>
+                    <button class="admin-tab" id="tabBtnAdd" onclick="switchTab('add')">➕ Thêm phim mới</button>
+                </div>
+
+                <!-- Danh sách -->
+                <div id="tabList">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Ảnh bìa</th>
+                                <th>Tên phim</th>
+                                <th>Năm</th>
+                                <th>Thể loại</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="movieTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Form thêm/sửa -->
+                <div id="tabAdd" style="display:none;">
+                    <div class="form-container">
+                        <h2 id="formTitle">➕ Thêm Phim Mới</h2>
+                        <input type="hidden" id="editId">
+                        
+                        <div class="form-group">
+                            <label>Tên phim *</label>
+                            <input type="text" id="mTitle" placeholder="Ví dụ: Lật Mặt 7">
+                        </div>
+                        <div style="display: flex; gap: 15px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label>Năm sản xuất</label>
+                                <input type="number" id="mYear" placeholder="2024">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Đánh giá (0-10)</label>
+                                <input type="text" id="mRating" placeholder="8.5">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Thể loại</label>
+                            <input type="text" id="mGenre" placeholder="Hành động, Gia đình">
+                        </div>
+                        
+                        <!-- Upload Ảnh Bìa (Poster) -->
+                        <div class="form-group" style="background: #16213e; padding: 15px; border-radius: 8px;">
+                            <label>1. Tải Ảnh Bìa (Poster - Dọc) * <span style="color:#e94560;font-size:12px;">(Tối đa 2MB)</span></label>
+                            <input type="file" id="mPosterFile" accept="image/*" onchange="handleFileUpload(event, 'poster')">
+                            <div class="preview-box">
+                                <div class="preview-item">
+                                    <img id="posterPreview" class="preview-poster" src="" alt="Poster">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Ảnh Banner -->
+                        <div class="form-group" style="background: #16213e; padding: 15px; border-radius: 8px;">
+                            <label>2. Tải Ảnh Banner (Ngang) - Dùng làm nền trang chủ <span style="color:#e94560;font-size:12px;">(Tối đa 3MB)</span></label>
+                            <input type="file" id="mBannerFile" accept="image/*" onchange="handleFileUpload(event, 'banner')">
+                            <div class="preview-box">
+                                <div class="preview-item">
+                                    <img id="bannerPreview" class="preview-banner" src="" alt="Banner">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Video -->
+                        <div class="form-group" style="background: #16213e; padding: 15px; border-radius: 8px;">
+                            <label>3. Video (Tối đa 15MB)</label>
+                            <input type="file" id="mVideoFile" accept="video/mp4,video/webm" onchange="handleVideoUpload(event)">
+                            <div class="preview-video-info" id="videoInfo">Đã chọn video!</div>
+                            <small style="color:#888; display:block; margin-top:10px; margin-bottom: 5px;">Hoặc dán link YouTube:</small>
+                            <input type="text" id="mVideoUrl" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nhãn (badge)</label>
+                            <input type="text" id="mBadge" placeholder="HOT / NEW / 4K">
+                        </div>
+                        <div class="form-group">
+                            <label>Mô tả</label>
+                            <textarea id="mDesc" rows="3" placeholder="Nội dung phim..."></textarea>
+                        </div>
+                        <button class="btn-primary" onclick="saveMovie()">💾 Lưu Phim</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL XEM PHIM ================= -->
+    <div class="modal" id="movieModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 id="modalTitle"></h2>
+            <div class="player" id="playerContainer"></div>
+            <p id="modalDesc"></p>
+            <p><strong>Thể loại:</strong> <span id="modalGenre"></span></p>
+            <p><strong>Năm:</strong> <span id="modalYear"></span> | <strong>Đánh giá:</strong> <span id="modalRating" class="rating"></span></p>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT ================= -->
+    <script>
+        // GIỚI HẠN KÍCH THƯỚC (Tính bằng Bytes)
+        const LIMIT_POSTER = 2 * 1024 * 1024; // 2MB
+        const LIMIT_BANNER = 3 * 1024 * 1024; // 3MB
+        const LIMIT_VIDEO = 15 * 1024 * 1024; // 15MB
+        const LIMIT_STORAGE = 4.5 * 1024 * 1024; // 4.5MB (LocalStorage thường giới hạn 5MB)
+
+        // BIẾN LƯU TRỮ TẠM
+        let currentPosterBase64 = '';
+        let currentBannerBase64 = '';
+        let currentVideoBase64 = '';
+
+        // KHO PHIM MẪU
+        const sampleMovies = [
+            {
+                id: 'm1', title: "Lật Mặt 7: Một Điều Ước", year: 2024, rating: "9.0", genre: "Hành động, Gia đình", badge: "HOT",
+                poster: "https://image.tmdb.org/t/p/w500/4E1Y5gG7c7Vz5w7p8m2Q1s4G5h6.jpg",
+                banner: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1600&q=80",
+                videoUrl: "https://www.youtube.com/watch?v=9w5jK2rO1qM", desc: "Bộ phim hành động Việt Nam đầy kịch tính."
+            }
+        ];
+
+        let currentMovies = [...sampleMovies];
+
+        // ================= ĐIỀU HƯỚNG & TIỆN ÍCH =================
+        function navigateTo(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            if (page === 'home') {
+                document.getElementById('pageHome').classList.add('active');
+                window.scrollTo(0, 0);
+            } else if (page === 'admin') {
+                document.getElementById('pageAdmin').classList.add('active');
+                renderMovieTable();
+                updateMemoryStatus();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        // Tính dung lượng bộ nhớ LocalStorage
+        function updateMemoryStatus() {
+            let total = 0;
+            for (let x in localStorage) {
+                if (localStorage.hasOwnProperty(x)) {
+                    total += (localStorage[x].length * 2); // UTF-16 = 2 bytes/char
+                }
+            }
+            const mb = (total / (1024 * 1024)).toFixed(2);
+            const percent = ((total / LIMIT_STORAGE) * 100).toFixed(1);
+            
+            const el = document.getElementById('memoryStatus');
+            let color = '#00b894';
+            if (percent > 80) color = '#fdcb6e';
+            if (percent > 95) color = '#d63031';
+            
+            el.innerHTML = `Dung lượng: <b style="color:${color}">${mb} MB</b> / 4.5 MB (${percent}%)`;
+        }
+
+        // ================= LOGIC TRANG CHỦ =================
+        function getAdminMovies() { return JSON.parse(localStorage.getItem('admin_movies') || '[]'); }
+
+        function loadAdminMovies() {
+            const grid = document.getElementById('adminMovieGrid');
+            const list = getAdminMovies();
+            grid.innerHTML = '';
+            if (list.length === 0) {
+                grid.innerHTML = '<p style="color:#999;grid-column:1/-1;">Chưa có phim nào. Vào trang Admin để thêm!</p>';
+                return;
+            }
+            list.forEach(m => grid.appendChild(createMovieCard(m)));
+        }
+
+        function createMovieCard(movie) {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.innerHTML = `
+                <div class="movie-poster">
+                    <img src="${movie.poster}" alt="${movie.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&q=80'">
+                    <span class="badge">${movie.badge || 'HD'}</span>
+                </div>
+                <div class="movie-info">
+                    <h3>${movie.title}</h3>
+                    <div class="meta">
+                        <span>${movie.year || '—'}</span>
+                        <span class="rating">★ ${movie.rating}</span>
+                    </div>
+                </div>
+            `;
+            card.onclick = () => openModal(movie);
+            return card;
+        }
+
+        function renderMovies(list) {
+            const grid = document.getElementById('movieGrid');
+            grid.innerHTML = '';
+            if (list.length === 0) { grid.innerHTML = '<p style="color:#999;grid-column:1/-1;">Không tìm thấy phim 😢</p>'; return; }
+            list.forEach(movie => grid.appendChild(createMovieCard(movie)));
+        }
+
+        function handleSearch(e) { if (e.key === 'Enter') searchMovies(); }
+        function searchMovies() {
+            const kw = document.getElementById('searchInput').value.toLowerCase().trim();
+            renderMovies(currentMovies.filter(m => m.title.toLowerCase().includes(kw) || m.genre.toLowerCase().includes(kw)));
+        }
+
+        // ================= LOGIC MODAL & HERO BANNER =================
+        function openModal(movie) {
+            document.getElementById('modalTitle').textContent = movie.title;
+            document.getElementById('modalDesc').textContent = movie.desc || '';
+            document.getElementById('modalGenre').textContent = movie.genre || '—';
+            document.getElementById('modalYear').textContent = movie.year || '—';
+            document.getElementById('modalRating').textContent = '★ ' + (movie.rating || 'N/A');
+
+            // Đổi ảnh Banner trên Hero nếu có
+            const hero = document.getElementById('mainHero');
+            if (movie.banner) {
+                hero.style.backgroundImage = `linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,0.3)), url('${movie.banner}')`;
+                document.getElementById('heroTitle').textContent = movie.title;
+                document.getElementById('heroDesc').textContent = movie.desc ? movie.desc.substring(0, 100) + '...' : '';
+            }
+
+            const player = document.getElementById('playerContainer');
+            if (movie.videoData) {
+                player.innerHTML = `<video src="${movie.videoData}" controls autoplay></video>`;
+            } else if (movie.videoUrl) {
+                const vid = extractYouTubeId(movie.videoUrl);
+                player.innerHTML = vid 
+                    ? `<iframe src="https://www.youtube.com/embed/${vid}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
+                    : '<p style="text-align:center;padding:20px;color:#999;">Link video không hợp lệ.</p>';
+            } else {
+                player.innerHTML = '<p style="text-align:center;padding:20px;color:#999;">Chưa có video.</p>';
+            }
+
+            document.getElementById('movieModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('movieModal').classList.remove('active');
+            document.getElementById('playerContainer').innerHTML = ''; 
+        }
+
+        function extractYouTubeId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        document.getElementById('movieModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+        // ================= LOGIC ADMIN: UPLOAD & GIỚI HẠN =================
+        function handleFileUpload(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Kiểm tra kích thước
+            const limit = type === 'poster' ? LIMIT_POSTER : LIMIT_BANNER;
+            if (file.size > limit) {
+                alert(`Lỗi: File quá lớn! Vui lòng chọn ảnh dưới ${limit / (1024*1024)}MB.`);
+                event.target.value = ''; // Reset input
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (type === 'poster') {
+                    currentPosterBase64 = e.target.result;
+                    const preview = document.getElementById('posterPreview');
+                    preview.src = currentPosterBase64;
+                    preview.style.display = 'block';
+                } else {
+                    currentBannerBase64 = e.target.result;
+                    const preview = document.getElementById('bannerPreview');
+                    preview.src = currentBannerBase64;
+                    preview.style.display = 'block';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleVideoUpload(event) {
+            const file = event.target.files[0];
+            const info = document.getElementById('videoInfo');
+            if (!file) { info.style.display = 'none'; return; }
+
+            if (file.size > LIMIT_VIDEO) {
+                alert(`Lỗi: Video quá lớn! Vui lòng chọn video dưới 15MB (hoặc dùng link YouTube).`);
+                event.target.value = '';
+                info.style.display = 'none';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentVideoBase64 = e.target.result;
+                info.textContent = `Đã chọn video: ${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)`;
+                info.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function getMovies() { return JSON.parse(localStorage.getItem('admin_movies') || '[]'); }
+        
+        function saveMovies(list) {
+            const str = JSON.stringify(list);
+            // Kiểm tra dung lượng trước khi lưu
+            if ((str.length * 2) > LIMIT_STORAGE) {
+                alert('Lỗi: Bộ nhớ trình duyệt đã đầy! Không thể lưu thêm. Vui lòng xóa bớt phim hoặc dùng link YouTube thay vì tải file video.');
+                return false;
+            }
+            localStorage.setItem('admin_movies', str);
+            loadAdminMovies();
+            updateMemoryStatus();
+            return true;
+        }
+
+        function switchTab(tab) {
+            document.getElementById('tabBtnList').classList.remove('active');
+            document.getElementById('tabBtnAdd').classList.remove('active');
+            if (tab === 'list') {
+                document.getElementById('tabBtnList').classList.add('active');
+                document.getElementById('tabList').style.display = 'block';
+                document.getElementById('tabAdd').style.display = 'none';
+                renderMovieTable();
+            } else {
+                document.getElementById('tabBtnAdd').classList.add('active');
+                document.getElementById('tabList').style.display = 'none';
+                document.getElementById('tabAdd').style.display = 'block';
+            }
+        }
+
+        function renderMovieTable() {
+            const list = getMovies();
+            const tbody = document.getElementById('movieTableBody');
+            tbody.innerHTML = '';
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:30px;">Chưa có phim nào tự thêm</td></tr>';
+                return;
+            }
+            list.forEach(m => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><img src="${m.poster}" onerror="this.src='https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=50&q=80'"></td>
+                    <td>${m.title}</td>
+                    <td>${m.year || '—'}</td>
+                    <td>${m.genre || '—'}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editMovie('${m.id}')">Sửa</button>
+                        <button class="btn-danger" onclick="deleteMovie('${m.id}')">Xóa</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function saveMovie() {
+            const id = document.getElementById('editId').value;
+            const title = document.getElementById('mTitle').value.trim();
+            
+            if (!title) { showAlert('Vui lòng nhập tên phim!', '#d63031'); return; }
+
+            const movie = {
+                id: id || 'movie_' + Date.now(),
+                title,
+                year: document.getElementById('mYear').value,
+                genre: document.getElementById('mGenre').value,
+                rating: document.getElementById('mRating').value || 'N/A',
+                badge: document.getElementById('mBadge').value || 'HD',
+                desc: document.getElementById('mDesc').value,
+                videoUrl: document.getElementById('mVideoUrl').value.trim(),
+                videoData: currentVideoBase64,
+                // Nếu không up ảnh mới, giữ lại ảnh cũ (nếu có)
+                poster: currentPosterBase64 || (id ? getMovies().find(x => x.id === id)?.poster : 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&q=80'),
+                banner: currentBannerBase64 || (id ? getMovies().find(x => x.id === id)?.banner : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1600&q=80')
+            };
+
+            const list = getMovies();
+            if (id) {
+                const idx = list.findIndex(m => m.id === id);
+                if (idx > -1) list[idx] = movie;
+            } else {
+                list.push(movie);
+            }
+
+            if (saveMovies(list)) {
+                showAlert(id ? 'Đã cập nhật phim!' : 'Đã thêm phim thành công!', '#00b894');
+                resetForm();
+                switchTab('list');
+            }
+        }
+
+        function editMovie(id) {
+            const m = getMovies().find(x => x.id === id);
+            if (!m) return;
+            
+            document.getElementById('editId').value = m.id;
+            document.getElementById('mTitle').value = m.title || '';
+            document.getElementById('mYear').value = m.year || '';
+            document.getElementById('mGenre').value = m.genre || '';
+            document.getElementById('mRating').value = m.rating || '';
+            document.getElementById('mBadge').value = m.badge || '';
+            document.getElementById('mDesc').value = m.desc || '';
+            document.getElementById('mVideoUrl').value = m.videoUrl || '';
+            
+            // Hiển thị ảnh cũ
+            currentPosterBase64 = m.poster; 
+            const pPreview = document.getElementById('posterPreview');
+            pPreview.src = m.poster;
+            pPreview.style.display = 'block';
+
+            currentBannerBase64 = m.banner || '';
+            const bPreview = document.getElementById('bannerPreview');
+            if(m.banner) {
+                bPreview.src = m.banner;
+                bPreview.style.display = 'block';
+            } else {
+                bPreview.style.display = 'none';
+            }
+            
+            currentVideoBase64 = m.videoData || '';
+            document.getElementById('mVideoFile').value = '';
+            document.getElementById('videoInfo').style.display = 'none';
+
+            document.getElementById('formTitle').textContent = '✏️ Sửa Phim';
+            switchTab('add');
+        }
+
+        // TÍNH NĂNG XÓA PHIM
+        function deleteMovie(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa phim này không?')) return;
+            saveMovies(getMovies().filter(m => m.id !== id));
+            renderMovieTable();
+            showAlert('Đã xóa phim thành công!', '#d63031');
+        }
+
+        function resetForm() {
+            ['editId','mTitle','mYear','mGenre','mRating','mBadge','mDesc','mVideoUrl','mPosterFile','mBannerFile','mVideoFile']
+                .forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.value = '';
+                });
+            currentPosterBase64 = '';
+            currentBannerBase64 = '';
+            currentVideoBase64 = '';
+            document.getElementById('posterPreview').style.display = 'none';
+            document.getElementById('bannerPreview').style.display = 'none';
+            document.getElementById('videoInfo').style.display = 'none';
+            document.getElementById('formTitle').textContent = '➕ Thêm Phim Mới';
+        }
+
+        function showAlert(msg, color) {
+            const a = document.getElementById('adminAlert');
+            a.style.backgroundColor = color;
+            a.className = 'alert show';
+            a.textContent = msg;
+            setTimeout(() => a.classList.remove('show'), 3000);
+        }
+
+        // ================= KHỞI ĐỘNG =================
+        renderMovies(currentMovies);
+        loadAdminMovies();
+    </script>
+</body>
+</html>
