@@ -4,7 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rổ Phim - Xem Phim Online</title>
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #0f0f0f; color: #fff; }
+
+        header {
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            padding: 15px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            flex-wrap: wrap; gap: 10px;
+        }
+        .logo { font-size: 28px; font-weight: bold; color: #e94560; cursor: pointer; }
+        .logo span { color: #fff; }
+        nav ul { display: flex; list-style: none; gap: 25px; }
+        nav ul li a { color: #ddd; text-decoration: none; font-size: 15px; transition: color 0.3s; }
+        nav ul li a:hover { color: #e94560; }
+
+        .search-box { display: flex; background: #1f1f2e; border-radius: 25px; overflow: hidden; }
+        .search-box input { padding: 10px 15px; background: transparent; border: none; outline: none; color: #fff; width: 260px; }
+        .search-box button { padding: 10px 18px; background: #e94560; border: none; color: #fff; cursor: pointer; }
+
+        .hero {
+            height: 450px;
+            background: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,0.3)),
+                        url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1600') center/cover;
+            display: flex; align-items: center; padding: 0 60px;
+        }
+        .hero-content h1 { font-size: 48px; margin-bottom: 15px; max-width: 600px; }
+        .hero-content p { color: #ccc; max-width: 500px; margin-bottom: 25px; line-height: 1.6; }
+
+        .btn-watch { padding: 12px 30px; background: #e94560; color: #fff; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .btn-watch:hover { background: #c73650; transform: scale(1.05); }
+
+        .section { padding: 40px 60px; }
+        .section-title { font-size: 26px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .section-title::before { content: ''; width: 5px; height: 28px; background: #e94560; border-radius: 3px; }
+
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; }
+        .movie-card { background: #1a1a2e; border-radius: 10px; overflow: hidden; cursor: pointer; transition: 0.3s; position: relative; }
+        .movie-card:hover { transform: translateY(-8px); box-shadow: 0 10px 25px rgba(233,69,96,0.3); }
+        .movie-poster { position: relative; aspect-ratio: 2/3; overflow: hidden; background: #222; }
+        .movie-poster img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+        .movie-card:hover .movie-poster img { transform: scale(1.1); }
+        .badge { position: absolute; top: 10px; left: 10px; background: #e94560; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .movie-info { padding: 12px 15px; }
+        .movie-info h3 { font-size: 15px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .movie-info .meta { font-size: 13px; color: #999; display: flex; justify-content: space-between; }
+        .rating { color: #ffb400; }
+
+        footer { background: #111122; padding: 30px 60px; text-align: center; color: #888; font-size: 14px; margin-top: 40px; }
+        footer a { color: #e94560; text-decoration: none; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-content { background: #1a1a2e; border-radius: 12px; max-width: 900px; width: 100%; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #e94560; background: none; border: none; }
+        .modal-content h2 { margin-bottom: 15px; padding-right: 30px;}
+        .player { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; margin-bottom: 20px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #999; }
+        .player iframe { width: 100%; height: 100%; border: none; }
+        .modal-content p { color: #bbb; line-height: 1.7; margin-bottom: 10px; }
+
+        @media (max-width: 768px) {
+            header { padding: 15px 20px; }
+            nav ul { display: none; }
+            .search-box input { width: 150px; }
+            .hero { height: 350px; padding: 0 25px; }
+            .hero-content h1 { font-size: 30px; }
+            .section { padding: 30px 20px; }
+            footer { padding: 20px; }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -18,7 +89,7 @@
             </ul>
         </nav>
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Tìm phim trên TMDB..." onkeyup="handleSearch(event)">
+            <input type="text" id="searchInput" placeholder="Tìm phim..." onkeyup="handleSearch(event)">
             <button onclick="searchMovies()">🔍</button>
         </div>
     </header>
@@ -26,19 +97,14 @@
     <section class="hero">
         <div class="hero-content">
             <h1>Phim Hay Đang Chờ Bạn</h1>
-            <p>Khám phá kho phim khổng lồ từ TMDB, cập nhật liên tục mỗi ngày.</p>
+            <p>Khám phá kho phim chất lượng cao, xem trực tuyến với chất lượng tốt nhất.</p>
             <button class="btn-watch" onclick="document.getElementById('phim-le').scrollIntoView({behavior:'smooth'})">▶ Xem Ngay</button>
         </div>
     </section>
 
     <section class="section" id="phim-le">
-        <h2 class="section-title">Phim Phổ Biến (TMDB)</h2>
-        <div class="movie-grid" id="movieGrid">
-            <p style="color:#999;grid-column:1/-1;">Đang tải phim...</p>
-        </div>
-        <div style="text-align:center;margin-top:30px;">
-            <button class="btn-watch" onclick="loadMore()">Tải thêm</button>
-        </div>
+        <h2 class="section-title">Phim Mới Cập Nhật</h2>
+        <div class="movie-grid" id="movieGrid"></div>
     </section>
 
     <section class="section" id="phim-bo">
@@ -47,7 +113,7 @@
     </section>
 
     <footer>
-        <p>© 2024 <a href="#">Rổ Phim</a> - Dữ liệu từ TMDB API</p>
+        <p>© 2024 <a href="#">Rổ Phim</a> - Xem phim online miễn phí</p>
     </footer>
 
     <!-- Modal xem phim -->
@@ -62,7 +128,186 @@
         </div>
     </div>
 
-    <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
+    <script>
+        // KHO PHIM MẪU (Không cần API Key, có link ảnh và video YouTube thật)
+        const sampleMovies = [
+            {
+                id: 'm1',
+                title: "Lật Mặt 7: Một Điều Ước",
+                year: 2024,
+                rating: "9.0",
+                genre: "Hành động, Gia đình",
+                badge: "HOT",
+                poster: "https://image.tmdb.org/t/p/w500/4E1Y5gG7c7Vz5w7p8m2Q1s4G5h6.jpg", // Link ảnh mẫu
+                videoUrl: "https://www.youtube.com/watch?v=9w5jK2rO1qM", // Video mẫu
+                desc: "Bộ phim hành động Việt Nam đầy kịch tính về tình cảm gia đình và những màn hành động mãn nhãn."
+            },
+            {
+                id: 'm2',
+                title: "Dune: Hành Tinh Cát 2",
+                year: 2024,
+                rating: "8.8",
+                genre: "Khoa học viễn tưởng",
+                badge: "4K",
+                poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+                videoUrl: "https://www.youtube.com/watch?v=Way9Dexny3w",
+                desc: "Hành trình của Paul Atreides tiếp tục với những trận chiến và âm mưu trên hành tinh cát Arrakis."
+            },
+            {
+                id: 'm3',
+                title: "Oppenheimer",
+                year: 2023,
+                rating: "9.2",
+                genre: "Lịch sử, Drama",
+                badge: "HD",
+                poster: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+                videoUrl: "https://www.youtube.com/watch?v=uYPbbksJxIg",
+                desc: "Cuộc đời của nhà khoa học J. Robert Oppenheimer và quá trình chế tạo bom nguyên tử."
+            },
+            {
+                id: 'm4',
+                title: "The Batman",
+                year: 2022,
+                rating: "8.7",
+                genre: "Hành động, Tội phạm",
+                badge: "HD",
+                poster: "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+                videoUrl: "https://www.youtube.com/watch?v=mqqft2x_Aa4",
+                desc: "Batman đối mặt với kẻ thù Riddler trong cuộc chiến bảo vệ thành phố Gotham."
+            },
+            {
+                id: 'm5',
+                title: "Mai",
+                year: 2024,
+                rating: "8.9",
+                genre: "Tâm lý, Tình cảm",
+                badge: "NEW",
+                poster: "https://image.tmdb.org/t/p/w500/9wZp4x5yHj7aV8z5w7p8m2Q1s4G.jpg", // Link dự phòng
+                videoUrl: "https://www.youtube.com/watch?v=1g7jK2rO1qM",
+                desc: "Bộ phim Việt Nam đầy cảm xúc về số phận và tình yêu của người phụ nữ."
+            },
+            {
+                id: 'm6',
+                title: "Kẻ Trộm Mặt Trăng 4",
+                year: 2024,
+                rating: "8.0",
+                genre: "Hoạt hình, Hài",
+                badge: "HOT",
+                poster: "https://image.tmdb.org/t/p/w500/wW2e9E7m2Q1s4G5h6.jpg",
+                videoUrl: "https://www.youtube.com/watch?v=8g7jK2rO1qM",
+                desc: "Gru và các Minion trở lại với cuộc phiêu lưu mới đầy tiếng cười và bất ngờ."
+            }
+        ];
+
+        let currentMovies = [...sampleMovies];
+
+        // Hàm lấy phim Admin lưu trong máy
+        function getAdminMovies() {
+            return JSON.parse(localStorage.getItem('admin_movies') || '[]');
+        }
+
+        // Hàm lưu phim Admin
+        function loadAdminMovies() {
+            const grid = document.getElementById('adminMovieGrid');
+            const list = getAdminMovies();
+            grid.innerHTML = '';
+            if (list.length === 0) {
+                grid.innerHTML = '<p style="color:#999;grid-column:1/-1;">Chưa có phim nào. Vào trang Admin để thêm!</p>';
+                return;
+            }
+            list.forEach(m => grid.appendChild(createMovieCard(m)));
+        }
+
+        // Tạo thẻ phim
+        function createMovieCard(movie) {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.innerHTML = `
+                <div class="movie-poster">
+                    <img src="${movie.poster}" alt="${movie.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&q=80'">
+                    <span class="badge">${movie.badge || 'HD'}</span>
+                </div>
+                <div class="movie-info">
+                    <h3>${movie.title}</h3>
+                    <div class="meta">
+                        <span>${movie.year || '—'}</span>
+                        <span class="rating">★ ${movie.rating}</span>
+                    </div>
+                </div>
+            `;
+            card.onclick = () => openModal(movie);
+            return card;
+        }
+
+        // Hiển thị phim ra màn hình
+        function renderMovies(list) {
+            const grid = document.getElementById('movieGrid');
+            grid.innerHTML = '';
+            if (list.length === 0) {
+                grid.innerHTML = '<p style="color:#999;grid-column:1/-1;">Không tìm thấy phim 😢</p>';
+                return;
+            }
+            list.forEach(movie => grid.appendChild(createMovieCard(movie)));
+        }
+
+        // Tìm kiếm
+        function handleSearch(e) {
+            if (e.key === 'Enter') searchMovies();
+        }
+        function searchMovies() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = currentMovies.filter(m => 
+                m.title.toLowerCase().includes(keyword) || 
+                m.genre.toLowerCase().includes(keyword)
+            );
+            renderMovies(filtered);
+        }
+
+        // Mở Modal và phát Video
+        function openModal(movie) {
+            document.getElementById('modalTitle').textContent = movie.title;
+            document.getElementById('modalDesc').textContent = movie.desc || '';
+            document.getElementById('modalGenre').textContent = movie.genre || '—';
+            document.getElementById('modalYear').textContent = movie.year || '—';
+            document.getElementById('modalRating').textContent = '★ ' + (movie.rating || 'N/A');
+
+            const player = document.getElementById('playerContainer');
+            
+            // Chuyển link Youtube sang dạng nhúng (embed)
+            if (movie.videoUrl) {
+                const videoId = extractYouTubeId(movie.videoUrl);
+                if (videoId) {
+                    player.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                } else {
+                    player.innerHTML = '<p style="text-align:center;padding:20px;color:#999;">Link video không hợp lệ.</p>';
+                }
+            } else {
+                player.innerHTML = '<p style="text-align:center;padding:20px;color:#999;">Chưa có video.</p>';
+            }
+
+            document.getElementById('movieModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('movieModal').classList.remove('active');
+            document.getElementById('playerContainer').innerHTML = ''; 
+        }
+
+        // Hàm lấy ID video từ link Youtube
+        function extractYouTubeId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        // Đóng modal khi click ra ngoài
+        document.getElementById('movieModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Chạy khi tải trang
+        renderMovies(currentMovies);
+        loadAdminMovies();
+    </script>
 </body>
 </html>
