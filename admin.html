@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Rổ Phim</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="admin-body">
+    <!-- Đăng nhập -->
+    <div id="loginSection" class="login-box">
+        <h2>🔐 Đăng Nhập Admin</h2>
+        <div id="loginAlert" class="alert alert-error"></div>
+        <div class="form-group">
+            <label>Tên đăng nhập</label>
+            <input type="text" id="username" placeholder="admin">
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="password" placeholder="admin123" onkeyup="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="btn-primary" onclick="doLogin()">Đăng Nhập</button>
+        <p style="text-align:center;margin-top:15px;color:#666;font-size:13px;">
+            Mặc định: <b>admin / admin123</b>
+        </p>
+        <p style="text-align:center;margin-top:10px;">
+            <a href="index.html" style="color:#e94560;">← Về trang chủ</a>
+        </p>
+    </div>
+
+    <!-- Khu vực admin -->
+    <div id="adminSection" class="admin-container" style="display:none;">
+        <div class="admin-header">
+            <h1>🎬 Quản Lý Phim</h1>
+            <div>
+                <span style="color:#999;margin-right:15px;">Xin chào, <b id="adminName" style="color:#e94560;"></b></span>
+                <button class="btn-danger" onclick="logoutAdmin()">Đăng Xuất</button>
+            </div>
+        </div>
+
+        <div id="adminAlert" class="alert"></div>
+
+        <div class="admin-tabs">
+            <button class="admin-tab active" onclick="switchTab('list')">📋 Danh sách phim</button>
+            <button class="admin-tab" onclick="switchTab('add')">➕ Thêm phim</button>
+        </div>
+
+        <!-- Danh sách -->
+        <div id="tabList">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Poster</th>
+                        <th>Tên phim</th>
+                        <th>Năm</th>
+                        <th>Thể loại</th>
+                        <th>Đánh giá</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="movieTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Form thêm/sửa -->
+        <div id="tabAdd" style="display:none;">
+            <div class="login-box" style="max-width:600px;margin:0 auto;">
+                <h2 id="formTitle">➕ Thêm Phim Mới</h2>
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label>Tên phim *</label>
+                    <input type="text" id="mTitle" placeholder="Ví dụ: Lật Mặt 7">
+                </div>
+                <div class="form-group">
+                    <label>Năm sản xuất</label>
+                    <input type="number" id="mYear" placeholder="2024">
+                </div>
+                <div class="form-group">
+                    <label>Thể loại</label>
+                    <input type="text" id="mGenre" placeholder="Hành động, Gia đình">
+                </div>
+                <div class="form-group">
+                    <label>Đánh giá (0-10)</label>
+                    <input type="text" id="mRating" placeholder="8.5">
+                </div>
+                <div class="form-group">
+                    <label>Link poster (URL ảnh thật) *</label>
+                    <input type="text" id="mPoster" placeholder="https://image.tmdb.org/t/p/w500/...">
+                </div>
+                <div class="form-group">
+                    <label>Link video YouTube</label>
+                    <input type="text" id="mVideo" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                <div class="form-group">
+                    <label>Nhãn (badge)</label>
+                    <input type="text" id="mBadge" placeholder="HOT / NEW / 4K">
+                </div>
+                <div class="form-group">
+                    <label>Mô tả</label>
+                    <textarea id="mDesc" rows="4" placeholder="Nội dung phim..."></textarea>
+                </div>
+                <button class="btn-primary" onclick="saveMovie()">💾 Lưu Phim</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

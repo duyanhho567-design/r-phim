@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rổ Phim - Xem Phim Online</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">🎬 Rổ <span>Phim</span></div>
+        <nav>
+            <ul>
+                <li><a href="#">Trang Chủ</a></li>
+                <li><a href="#phim-le">Phim Lẻ</a></li>
+                <li><a href="#phim-bo">Phim Bộ</a></li>
+                <li><a href="admin.html">Admin</a></li>
+            </ul>
+        </nav>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Tìm phim trên TMDB..." onkeyup="handleSearch(event)">
+            <button onclick="searchMovies()">🔍</button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Phim Hay Đang Chờ Bạn</h1>
+            <p>Khám phá kho phim khổng lồ từ TMDB, cập nhật liên tục mỗi ngày.</p>
+            <button class="btn-watch" onclick="document.getElementById('phim-le').scrollIntoView({behavior:'smooth'})">▶ Xem Ngay</button>
+        </div>
+    </section>
+
+    <section class="section" id="phim-le">
+        <h2 class="section-title">Phim Phổ Biến (TMDB)</h2>
+        <div class="movie-grid" id="movieGrid">
+            <p style="color:#999;grid-column:1/-1;">Đang tải phim...</p>
+        </div>
+        <div style="text-align:center;margin-top:30px;">
+            <button class="btn-watch" onclick="loadMore()">Tải thêm</button>
+        </div>
+    </section>
+
+    <section class="section" id="phim-bo">
+        <h2 class="section-title">Phim Do Admin Đăng</h2>
+        <div class="movie-grid" id="adminMovieGrid"></div>
+    </section>
+
+    <footer>
+        <p>© 2024 <a href="#">Rổ Phim</a> - Dữ liệu từ TMDB API</p>
+    </footer>
+
+    <!-- Modal xem phim -->
+    <div class="modal" id="movieModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 id="modalTitle"></h2>
+            <div class="player" id="playerContainer"></div>
+            <p id="modalDesc"></p>
+            <p><strong>Thể loại:</strong> <span id="modalGenre"></span></p>
+            <p><strong>Năm:</strong> <span id="modalYear"></span> | <strong>Đánh giá:</strong> <span id="modalRating" class="rating"></span></p>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
